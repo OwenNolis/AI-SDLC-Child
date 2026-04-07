@@ -1,0 +1,74 @@
+version: 2
+updates:
+  # Backend (Maven)
+  - package-ecosystem: "maven"
+    directory: "/backend"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+    groups:
+      backend-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Frontend (npm)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "daily"
+      time: "08:00"
+      timezone: "Europe/Brussels"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+    # Temporarily disable grouping to test PR limits
+    groups:
+      frontend-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      frontend-major:
+        patterns:
+          - "react*"
+          - "@types/*"
+        update-types:
+          - "major"
+
+  # AI validator tooling (npm)
+  - package-ecosystem: "npm"
+    directory: "/ai/validator"
+    schedule:
+      interval: "daily"
+      time: "08:00"
+      timezone: "Europe/Brussels"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ai"
+    groups:
+      ai-validator-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "08:00"
+      timezone: "Europe/Brussels"
+    labels:
+      - "dependencies"
+      - "ci"

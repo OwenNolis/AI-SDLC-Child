@@ -1,0 +1,16 @@
+name: AI Code Fixes
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  ai-code-fixes:
+    uses: OwenNolis/AI-SDLC/.github/workflows/ai-code-fixes.yml@main
+    secrets: inherit
+    with:
+      FEATURE_ID: ${{ vars.FEATURE_ID }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}

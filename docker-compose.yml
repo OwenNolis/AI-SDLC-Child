@@ -1,0 +1,14 @@
+services:
+  backend:
+    image: ${DOCKER_IMAGE_BACKEND:-ghcr.io/owennolis/ai-sdlc-child-backend:latest}
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  frontend:
+    image: ${DOCKER_IMAGE_FRONTEND:-ghcr.io/owennolis/ai-sdlc-child-frontend:latest}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

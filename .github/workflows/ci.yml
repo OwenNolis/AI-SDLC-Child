@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+
+jobs:
+  ci:
+    uses: OwenNolis/AI-SDLC/.github/workflows/ci.yml@main
+    secrets: inherit
+    with:
+      FEATURE_ID: ${{ vars.FEATURE_ID }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+      DOCKER_OWNER: ${{ vars.DOCKER_OWNER }}
+      DOCKER_IMAGE_BACKEND: ${{ vars.DOCKER_IMAGE_BACKEND }}
+      DOCKER_IMAGE_FRONTEND: ${{ vars.DOCKER_IMAGE_FRONTEND }}

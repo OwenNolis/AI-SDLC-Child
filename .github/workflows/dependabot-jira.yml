@@ -1,0 +1,13 @@
+name: Dependabot → Jira
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+
+jobs:
+  jira:
+    uses: OwenNolis/AI-SDLC/.github/workflows/dependabot-jira.yml@main
+    secrets: inherit
+    with:
+      JIRA_PROJECT_KEY: ${{ vars.JIRA_PROJECT_KEY }}
+      JIRA_DOMAIN: ${{ vars.JIRA_DOMAIN }}

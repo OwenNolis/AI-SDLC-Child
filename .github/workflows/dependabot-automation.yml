@@ -1,0 +1,12 @@
+name: Dependabot automation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  dependabot:
+    uses: OwenNolis/AI-SDLC/.github/workflows/dependabot-automation.yml@main
+    secrets: inherit
+    with:
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
