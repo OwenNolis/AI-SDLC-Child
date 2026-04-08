@@ -1,0 +1,15 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  sonarcloud:
+    uses: OwenNolis/AI-SDLC/.github/workflows/sonarcloud.yml@main
+    secrets: inherit
+    with:
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
