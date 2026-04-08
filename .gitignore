@@ -31,3 +31,21 @@ build/
 
 ### VS Code ###
 .vscode/
+
+.env
+
+# SonarQube scanner working directory
+.scannerwork/
+
+# AI workflow temp/log files
+*.log
+sonar_issues.json
+error_analysis.md
+extracted_errors.md
+fix_context.md
+fix_summary.md
+generated_fixes.md
+ai_suggestions.md
+compilation_errors.log
+test_failures.log
+sonar_issues.json
