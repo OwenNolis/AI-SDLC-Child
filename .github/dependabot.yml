@@ -28,7 +28,10 @@ updates:
     labels:
       - "dependencies"
       - "frontend"
-    # Temporarily disable grouping to test PR limits
+    ignore:
+      # TypeScript 6 has breaking changes incompatible with current Vite/React setup
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       frontend-minor-patch:
         patterns:
