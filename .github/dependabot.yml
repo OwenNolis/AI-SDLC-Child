@@ -29,8 +29,8 @@ updates:
       - "dependencies"
       - "frontend"
     ignore:
-      # TypeScript 6 has breaking changes incompatible with current Vite/React setup
-      - dependency-name: "typescript"
+      # Major version bumps require manual vetting — block all until ready
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
     groups:
       frontend-minor-patch:
