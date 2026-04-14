@@ -11,3 +11,6 @@ jobs:
     with:
       JIRA_PROJECT_KEY: ${{ vars.JIRA_PROJECT_KEY }}
       JIRA_DOMAIN: ${{ vars.JIRA_DOMAIN }}
+      PR_ACTION: ${{ github.event.action }}
+      PR_USER_LOGIN: ${{ github.event.pull_request.user.login }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
