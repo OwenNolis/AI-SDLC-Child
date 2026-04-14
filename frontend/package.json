@@ -11,7 +11,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^6.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.5",
     "axios": "1.15.0"
