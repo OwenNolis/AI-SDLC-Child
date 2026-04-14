@@ -5,12 +5,22 @@ on:
     types: [opened, reopened, closed]
 
 jobs:
-  jira:
+  jira-create:
+    if: github.event.action != 'closed' && github.event.pull_request.user.login == 'dependabot[bot]'
     uses: OwenNolis/AI-SDLC/.github/workflows/dependabot-jira.yml@main
     secrets: inherit
     with:
+      mode: create
       JIRA_PROJECT_KEY: ${{ vars.JIRA_PROJECT_KEY }}
       JIRA_DOMAIN: ${{ vars.JIRA_DOMAIN }}
-      PR_ACTION: ${{ github.event.action }}
-      PR_USER_LOGIN: ${{ github.event.pull_request.user.login }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+
+  jira-close:
+    if: github.event.action == 'closed' && github.event.pull_request.user.login == 'dependabot[bot]'
+    uses: OwenNolis/AI-SDLC/.github/workflows/dependabot-jira.yml@main
+    secrets: inherit
+    with:
+      mode: close
+      JIRA_PROJECT_KEY: ${{ vars.JIRA_PROJECT_KEY }}
+      JIRA_DOMAIN: ${{ vars.JIRA_DOMAIN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
