@@ -39,6 +39,9 @@ build/
 
 node_modules/
 
+# Parent repo tools — cloned locally for local use, CI checks it out automatically
+.sdlc-tools/
+
 # AI workflow temp/log files
 *.log
 sonar_issues.json
