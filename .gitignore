@@ -37,6 +37,8 @@ build/
 # SonarQube scanner working directory
 .scannerwork/
 
+node_modules/
+
 # AI workflow temp/log files
 *.log
 sonar_issues.json

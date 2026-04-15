@@ -1,0 +1,1300 @@
+{
+  "meta": {
+    "featureId": "feature-001-leave-request",
+    "title": "Feature-001: Verlofaanvraag indienen",
+    "version": "1.0.0"
+  },
+  "scope": {
+    "inScope": [
+      "Verlofaanvraag indienen met startdatum, einddatum en type verlof",
+      "Overzicht van eigen verlofaanvragen tonen",
+      "Verlofaanvraag intrekken zolang deze nog niet goedgekeurd is",
+      "Resterende verlofdagen tonen",
+      "Manager kan aanvragen goedkeuren of afwijzen met commentaar"
+    ],
+    "outOfScope": [
+      "Automatische goedkeuring bij afwezigheid manager",
+      "Integratie met externe HR-systemen",
+      "Verlofplanning voor het volledige team",
+      "Notificaties via e-mail of push"
+    ]
+  },
+  "assumptions": [],
+  "openQuestions": [],
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "text": "De medewerker kan een verlofaanvraag indienen met een startdatum, einddatum en verloftype (jaarlijks, ziekte, bijzonder).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-002",
+      "text": "De startdatum moet voor of gelijk aan de einddatum liggen.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-003",
+      "text": "Een verlofaanvraag kan niet worden ingediend voor een datum in het verleden.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-004",
+      "text": "De medewerker kan zijn eigen verlofaanvragen bekijken met status (aangevraagd, goedgekeurd, afgewezen).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-005",
+      "text": "De medewerker kan een aanvraag met status \"aangevraagd\" intrekken.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-006",
+      "text": "De medewerker ziet hoeveel verlofdagen hij nog heeft voor het huidige jaar.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-007",
+      "text": "De manager kan een openstaande verlofaanvraag goedkeuren of afwijzen met een verplicht commentaar bij afwijzing.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-008",
+      "text": "Overlappende verlofaanvragen voor dezelfde medewerker zijn niet toegestaan.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-009",
+      "text": "Bij ongeldige invoer worden veldspecifieke foutmeldingen getoond.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-010",
+      "text": "Een medewerker heeft maximaal 20 verlofdagen per jaar van type \"jaarlijks\".",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-011",
+      "text": "Verlof van type \"ziekte\" heeft geen daglimiet.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-012",
+      "text": "Een goedgekeurde aanvraag kan niet meer gewijzigd worden.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-013",
+      "text": "De verlofaanvraag moet binnen 2 seconden verwerkt worden.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-014",
+      "text": "Alleen de eigen medewerker en zijn directe manager mogen de aanvragen van die medewerker zien.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-015",
+      "text": "De manager kan aanvragen goedkeuren of afwijzen.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-016",
+      "text": "De medewerker wil een verlofaanvraag kunnen indienen zodat zijn manager deze kan goedkeuren of afwijzen.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-017",
+      "text": "De medewerker wil een overzicht van eigen verlofaanvragen kunnen tonen.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-018",
+      "text": "De medewerker wil een verlofaanvraag kunnen intrekken zolang deze nog niet goedgekeurd is.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-019",
+      "text": "De medewerker wil resterende verlofdagen kunnen tonen.",
+      "priority": "must"
+    }
+  ],
+  "domain": {
+    "entities": [
+      {
+        "name": "Employee",
+        "fields": [
+          {
+            "name": "id",
+            "type": "Long",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "firstName",
+            "type": "String",
+            "constraints": [
+              "notNull",
+              "minLength:1",
+              "maxLength:255"
+            ],
+            "testCases": [
+              "empty",
+              "too_short",
+              "too_long",
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "lastName",
+            "type": "String",
+            "constraints": [
+              "notNull",
+              "minLength:1",
+              "maxLength:255"
+            ],
+            "testCases": [
+              "empty",
+              "too_short",
+              "too_long",
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "email",
+            "type": "String",
+            "constraints": [
+              "notNull",
+              "minLength:5",
+              "maxLength:255"
+            ],
+            "testCases": [
+              "empty",
+              "too_short",
+              "too_long",
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "managerId",
+            "type": "Long",
+            "constraints": [],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "annualLeaveEntitlement",
+            "type": "Integer",
+            "constraints": [
+              "notNull",
+              "minValue:0"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LeaveRequest",
+        "fields": [
+          {
+            "name": "id",
+            "type": "Long",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "employeeId",
+            "type": "Long",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "startDate",
+            "type": "LocalDateTime",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "endDate",
+            "type": "LocalDateTime",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "leaveType",
+            "type": "String",
+            "constraints": [
+              "notNull",
+              "enum:YEARLY,SICK,SPECIAL"
+            ],
+            "testCases": [
+              "empty",
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "String",
+            "constraints": [
+              "notNull",
+              "enum:REQUESTED,APPROVED,REJECTED,CANCELLED"
+            ],
+            "testCases": [
+              "empty",
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "rejectionReason",
+            "type": "String",
+            "constraints": [
+              "maxLength:1000"
+            ],
+            "testCases": [
+              "too_long",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "LocalDateTime",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "updatedAt",
+            "type": "LocalDateTime",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LeaveBalance",
+        "fields": [
+          {
+            "name": "id",
+            "type": "Long",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "employeeId",
+            "type": "Long",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "year",
+            "type": "Integer",
+            "constraints": [
+              "notNull",
+              "minValue:1900",
+              "maxValue:2100"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "annualLeaveRemaining",
+            "type": "Integer",
+            "constraints": [
+              "notNull",
+              "minValue:0"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "api": {
+    "errorFormat": {
+      "type": "ApiError",
+      "fields": [
+        "correlationId",
+        "code",
+        "message",
+        "fieldErrors"
+      ]
+    },
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/api/employees",
+        "summary": "Maak een nieuwe medewerker aan",
+        "request": {
+          "bodySchemaRef": "CreateEmployeeRequest",
+          "validationRules": [
+            "firstName: Moet niet leeg zijn en minimaal 1, maximaal 255 karakters.",
+            "lastName: Moet niet leeg zijn en minimaal 1, maximaal 255 karakters.",
+            "email: Moet niet leeg zijn, minimaal 5, maximaal 255 karakters.",
+            "annualLeaveEntitlement: Moet niet leeg zijn en minimaal 0."
+          ]
+        },
+        "responses": [
+          {
+            "status": 201,
+            "bodySchemaRef": "EmployeeResponse",
+            "notes": "Medewerker succesvol aangemaakt"
+          },
+          {
+            "status": 400,
+            "bodySchemaRef": "ApiError",
+            "notes": "Validatiefout in request body"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "GET",
+        "path": "/api/employees/{id}",
+        "summary": "Haal een specifieke medewerker op",
+        "request": {},
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "EmployeeResponse",
+            "notes": "Medewerker succesvol opgehaald"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Medewerker niet gevonden"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om deze medewerker te bekijken"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/employees/{id}",
+        "summary": "Update een bestaande medewerker",
+        "request": {
+          "bodySchemaRef": "UpdateEmployeeRequest",
+          "validationRules": [
+            "firstName: Moet niet leeg zijn en minimaal 1, maximaal 255 karakters.",
+            "lastName: Moet niet leeg zijn en minimaal 1, maximaal 255 karakters.",
+            "email: Moet niet leeg zijn, minimaal 5, maximaal 255 karakters.",
+            "annualLeaveEntitlement: Moet niet leeg zijn en minimaal 0."
+          ]
+        },
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "EmployeeResponse",
+            "notes": "Medewerker succesvol bijgewerkt"
+          },
+          {
+            "status": 400,
+            "bodySchemaRef": "ApiError",
+            "notes": "Validatiefout in request body"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Medewerker niet gevonden"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om deze medewerker bij te werken"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/employees/{id}",
+        "summary": "Verwijder een medewerker",
+        "request": {},
+        "responses": [
+          {
+            "status": 204,
+            "notes": "Medewerker succesvol verwijderd",
+            "bodySchemaRef": "EmptyResponse"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Medewerker niet gevonden"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om deze medewerker te verwijderen"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "POST",
+        "path": "/api/leave-requests",
+        "summary": "Dien een verlofaanvraag in",
+        "request": {
+          "bodySchemaRef": "CreateLeaveRequestRequest",
+          "validationRules": [
+            "employeeId: Moet niet leeg zijn.",
+            "startDate: Moet niet leeg zijn.",
+            "endDate: Moet niet leeg zijn.",
+            "leaveType: Moet niet leeg zijn en een van de toegestane waarden zijn (YEARLY, SICK, SPECIAL).",
+            "status: Moet niet leeg zijn en een van de toegestane waarden zijn (REQUESTED, APPROVED, REJECTED, CANCELLED).",
+            "rejectionReason: Maximaal 1000 karakters.",
+            "startDate: Moet voor of gelijk aan endDate liggen.",
+            "startDate: Mag niet in het verleden liggen.",
+            "employeeId: Mag geen overlappende verlofaanvragen hebben."
+          ]
+        },
+        "responses": [
+          {
+            "status": 201,
+            "bodySchemaRef": "LeaveRequestResponse",
+            "notes": "Verlofaanvraag succesvol ingediend"
+          },
+          {
+            "status": 400,
+            "bodySchemaRef": "ApiError",
+            "notes": "Validatiefout in request body of bedrijfslogica"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om een verlofaanvraag in te dienen"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "GET",
+        "path": "/api/leave-requests",
+        "summary": "Haal verlofaanvragen op voor de ingelogde medewerker of zijn team (manager)",
+        "request": {},
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "LeaveRequestListResponse",
+            "notes": "Verlofaanvragen succesvol opgehaald"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om deze verlofaanvragen te bekijken"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "GET",
+        "path": "/api/leave-requests/{id}",
+        "summary": "Haal een specifieke verlofaanvraag op",
+        "request": {},
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "LeaveRequestResponse",
+            "notes": "Verlofaanvraag succesvol opgehaald"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Verlofaanvraag niet gevonden"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om deze verlofaanvraag te bekijken"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/leave-requests/{id}/cancel",
+        "summary": "Trek een verlofaanvraag in",
+        "request": {
+          "validationRules": [
+            "status: Moet 'REQUESTED' zijn om ingetrokken te kunnen worden."
+          ]
+        },
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "LeaveRequestResponse",
+            "notes": "Verlofaanvraag succesvol ingetrokken"
+          },
+          {
+            "status": 400,
+            "bodySchemaRef": "ApiError",
+            "notes": "Verlofaanvraag kan niet worden ingetrokken (bijv. al goedgekeurd)"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Verlofaanvraag niet gevonden"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om deze verlofaanvraag in te trekken"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/leave-requests/{id}/approve",
+        "summary": "Keur een verlofaanvraag goed",
+        "request": {
+          "bodySchemaRef": "ApproveLeaveRequestRequest",
+          "validationRules": [
+            "status: Moet 'REQUESTED' zijn om goedgekeurd te kunnen worden.",
+            "employeeId: Voldoende verlofdagen beschikbaar voor 'YEARLY' type."
+          ]
+        },
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "LeaveRequestResponse",
+            "notes": "Verlofaanvraag succesvol goedgekeurd"
+          },
+          {
+            "status": 400,
+            "bodySchemaRef": "ApiError",
+            "notes": "Verlofaanvraag kan niet worden goedgekeurd (bijv. onvoldoende verlofdagen, al goedgekeurd)"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Verlofaanvraag niet gevonden"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om deze verlofaanvraag goed te keuren"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/leave-requests/{id}/reject",
+        "summary": "Wijs een verlofaanvraag af",
+        "request": {
+          "bodySchemaRef": "RejectLeaveRequestRequest",
+          "validationRules": [
+            "status: Moet 'REQUESTED' zijn om afgewezen te kunnen worden.",
+            "rejectionReason: Moet niet leeg zijn bij afwijzing."
+          ]
+        },
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "LeaveRequestResponse",
+            "notes": "Verlofaanvraag succesvol afgewezen"
+          },
+          {
+            "status": 400,
+            "bodySchemaRef": "ApiError",
+            "notes": "Verlofaanvraag kan niet worden afgewezen (bijv. al goedgekeurd)"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Verlofaanvraag niet gevonden"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om deze verlofaanvraag af te wijzen"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      },
+      {
+        "method": "GET",
+        "path": "/api/leave-balances/current-year",
+        "summary": "Haal de resterende verlofdagen op voor het huidige jaar voor de ingelogde medewerker",
+        "request": {},
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "LeaveBalanceResponse",
+            "notes": "Resterende verlofdagen succesvol opgehaald"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Verlofbalans niet gevonden voor het huidige jaar"
+          },
+          {
+            "status": 403,
+            "bodySchemaRef": "ApiError",
+            "notes": "Niet geautoriseerd om deze verlofbalans te bekijken"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "bearer"
+      }
+    ]
+  },
+  "backend": {
+    "modules": [
+      {
+        "name": "employee",
+        "classes": [
+          {
+            "name": "EmployeeController",
+            "responsibility": "Handelt HTTP-verzoeken af voor medewerkergerelateerde operaties."
+          },
+          {
+            "name": "EmployeeService",
+            "responsibility": "Bevat de bedrijfslogica voor het beheren van medewerkers."
+          },
+          {
+            "name": "EmployeeRepository",
+            "responsibility": "Verantwoordelijk voor de interactie met de database voor medewerkergegevens."
+          },
+          {
+            "name": "Employee",
+            "responsibility": "Representeert de entiteit van een medewerker in de database."
+          },
+          {
+            "name": "CreateEmployeeRequest",
+            "responsibility": "DTO voor het aanmaken van een nieuwe medewerker."
+          },
+          {
+            "name": "UpdateEmployeeRequest",
+            "responsibility": "DTO voor het updaten van een bestaande medewerker."
+          },
+          {
+            "name": "EmployeeResponse",
+            "responsibility": "DTO voor het retourneren van medewerkergegevens."
+          },
+          {
+            "name": "EmployeeNotFoundException",
+            "responsibility": "Exception die wordt gegenereerd wanneer een medewerker niet wordt gevonden."
+          },
+          {
+            "name": "EmployeeValidationService",
+            "responsibility": "Valideert de invoer voor medewerkergerelateerde operaties."
+          }
+        ]
+      },
+      {
+        "name": "leaverequest",
+        "classes": [
+          {
+            "name": "LeaveRequestController",
+            "responsibility": "Handelt HTTP-verzoeken af voor verlofaanvragen."
+          },
+          {
+            "name": "LeaveRequestService",
+            "responsibility": "Bevat de bedrijfslogica voor het beheren van verlofaanvragen."
+          },
+          {
+            "name": "LeaveRequestRepository",
+            "responsibility": "Verantwoordelijk voor de interactie met de database voor verlofaanvraaggegevens."
+          },
+          {
+            "name": "LeaveRequest",
+            "responsibility": "Representeert de entiteit van een verlofaanvraag in de database."
+          },
+          {
+            "name": "CreateLeaveRequestRequest",
+            "responsibility": "DTO voor het indienen van een nieuwe verlofaanvraag."
+          },
+          {
+            "name": "LeaveRequestResponse",
+            "responsibility": "DTO voor het retourneren van verlofaanvraaggegevens."
+          },
+          {
+            "name": "LeaveRequestListResponse",
+            "responsibility": "DTO voor het retourneren van een lijst met verlofaanvragen."
+          },
+          {
+            "name": "ApproveLeaveRequestRequest",
+            "responsibility": "DTO voor het goedkeuren van een verlofaanvraag."
+          },
+          {
+            "name": "RejectLeaveRequestRequest",
+            "responsibility": "DTO voor het afwijzen van een verlofaanvraag."
+          },
+          {
+            "name": "LeaveRequestNotFoundException",
+            "responsibility": "Exception die wordt gegenereerd wanneer een verlofaanvraag niet wordt gevonden."
+          },
+          {
+            "name": "LeaveRequestValidationService",
+            "responsibility": "Valideert de invoer voor verlofaanvragen, inclusief bedrijfslogica."
+          },
+          {
+            "name": "PastDateValidationRule",
+            "responsibility": "Valideert dat een verlofaanvraag niet in het verleden ligt."
+          },
+          {
+            "name": "OverlappingLeaveRequestValidationRule",
+            "responsibility": "Valideert dat er geen overlappende verlofaanvragen zijn voor dezelfde medewerker."
+          },
+          {
+            "name": "LeaveEntitlementValidationRule",
+            "responsibility": "Valideert dat er voldoende verlofdagen beschikbaar zijn voor een jaarlijkse verlofaanvraag."
+          },
+          {
+            "name": "LeaveRequestStatusTransitionValidationRule",
+            "responsibility": "Valideert dat statusovergangen van verlofaanvragen geldig zijn."
+          }
+        ]
+      },
+      {
+        "name": "leavebalance",
+        "classes": [
+          {
+            "name": "LeaveBalanceController",
+            "responsibility": "Handelt HTTP-verzoeken af voor verlofbalansen."
+          },
+          {
+            "name": "LeaveBalanceService",
+            "responsibility": "Bevat de bedrijfslogica voor het beheren van verlofbalansen."
+          },
+          {
+            "name": "LeaveBalanceRepository",
+            "responsibility": "Verantwoordelijk voor de interactie met de database voor verlofbalansgegevens."
+          },
+          {
+            "name": "LeaveBalance",
+            "responsibility": "Representeert de entiteit van een verlofbalans in de database."
+          },
+          {
+            "name": "LeaveBalanceResponse",
+            "responsibility": "DTO voor het retourneren van verlofbalansgegevens."
+          },
+          {
+            "name": "LeaveBalanceNotFoundException",
+            "responsibility": "Exception die wordt gegenereerd wanneer een verlofbalans niet wordt gevonden."
+          }
+        ]
+      },
+      {
+        "name": "common",
+        "classes": [
+          {
+            "name": "ApiError",
+            "responsibility": "Standaardformaat voor foutmeldingen in API-responses."
+          },
+          {
+            "name": "FieldError",
+            "responsibility": "Representeert een specifieke veldfout in een API-response."
+          },
+          {
+            "name": "GlobalExceptionHandler",
+            "responsibility": "Centrale afhandeling van exceptions voor de gehele applicatie."
+          },
+          {
+            "name": "SecurityConfig",
+            "responsibility": "Configureert beveiligingsinstellingen, inclusief authenticatie en autorisatie."
+          },
+          {
+            "name": "JwtTokenProvider",
+            "responsibility": "Verantwoordelijk voor het genereren en valideren van JWT-tokens."
+          },
+          {
+            "name": "CustomUserDetailsService",
+            "responsibility": "Laadt gebruikersgegevens voor authenticatie."
+          },
+          {
+            "name": "EmployeeMapper",
+            "responsibility": "Mapt tussen Employee entiteit en DTO's."
+          },
+          {
+            "name": "LeaveRequestMapper",
+            "responsibility": "Mapt tussen LeaveRequest entiteit en DTO's."
+          },
+          {
+            "name": "LeaveBalanceMapper",
+            "responsibility": "Mapt tussen LeaveBalance entiteit en DTO's."
+          },
+          {
+            "name": "ValidationUtil",
+            "responsibility": "Hulpprogramma voor algemene validatieregels."
+          }
+        ]
+      }
+    ]
+  },
+  "frontend": {
+    "routes": [
+      "/",
+      "/login",
+      "/dashboard",
+      "/employees",
+      "/employees/new",
+      "/employees/:id",
+      "/leave-requests",
+      "/leave-requests/new",
+      "/leave-requests/:id",
+      "/leave-balances"
+    ],
+    "components": [
+      "App",
+      "Router",
+      "Layout",
+      "LoginPage",
+      "DashboardPage",
+      "EmployeeListPage",
+      "EmployeeForm",
+      "EmployeeDetailPage",
+      "LeaveRequestListPage",
+      "LeaveRequestForm",
+      "LeaveRequestDetailPage",
+      "LeaveBalanceDisplay",
+      "Navbar",
+      "Sidebar",
+      "Button",
+      "Input",
+      "Select",
+      "DatePicker",
+      "Modal",
+      "ToastNotification",
+      "LoadingSpinner",
+      "ErrorMessage"
+    ]
+  },
+  "tests": {
+    "unit": [
+      "LoginPage render",
+      "DashboardPage render",
+      "EmployeeForm validation",
+      "LeaveRequestForm validation",
+      "Navbar component",
+      "Sidebar component",
+      "Button component",
+      "Input component",
+      "Select component",
+      "DatePicker component",
+      "Modal component",
+      "ToastNotification component",
+      "LoadingSpinner component",
+      "ErrorMessage component"
+    ],
+    "integration": [
+      "POST /api/employees \u2192 201 Created",
+      "GET /api/employees/{id} \u2192 200 OK",
+      "PUT /api/employees/{id} \u2192 200 OK",
+      "DELETE /api/employees/{id} \u2192 204 No Content",
+      "POST /api/leave-requests \u2192 201 Created",
+      "GET /api/leave-requests \u2192 200 OK",
+      "GET /api/leave-requests/{id} \u2192 200 OK",
+      "PATCH /api/leave-requests/{id}/cancel \u2192 200 OK",
+      "PATCH /api/leave-requests/{id}/approve \u2192 200 OK",
+      "PATCH /api/leave-requests/{id}/reject \u2192 200 OK",
+      "GET /api/leave-balances/current-year \u2192 200 OK"
+    ],
+    "e2e": [
+      "Gebruiker logt in, navigeert naar verlofaanvragen, dient een nieuwe verlofaanvraag in, controleert de status en resterende verlofdagen.",
+      "Manager logt in, bekijkt openstaande verlofaanvragen, keurt een aanvraag goed en wijst een andere aanvraag af met een reden.",
+      "Gebruiker dient een verlofaanvraag in, trekt deze vervolgens in voordat deze goedgekeurd is.",
+      "Gebruiker probeert een verlofaanvraag in te dienen met ongeldige data en ziet de correcte foutmeldingen.",
+      "Gebruiker probeert een verlofaanvraag in te dienen die overlapt met een bestaande aanvraag en ziet een foutmelding.",
+      "Gebruiker probeert een verlofaanvraag in te dienen die in het verleden ligt en ziet een foutmelding.",
+      "Gebruiker probeert een verlofaanvraag goed te keuren met onvoldoende verlofdagen en ziet een foutmelding."
+    ]
+  },
+  "traceability": [
+    {
+      "reqId": "REQ-001",
+      "backendRefs": [
+        "LeaveRequestController",
+        "LeaveRequestService",
+        "CreateLeaveRequestRequest"
+      ],
+      "frontendRefs": [
+        "LeaveRequestForm",
+        "DatePicker",
+        "Select"
+      ],
+      "testRefs": [
+        "Test het indienen van een verlofaanvraag met verschillende startdatums, einddatums en verloftypes (jaarlijks, ziekte, bijzonder)."
+      ]
+    },
+    {
+      "reqId": "REQ-002",
+      "backendRefs": [
+        "LeaveRequestValidationService",
+        "PastDateValidationRule"
+      ],
+      "frontendRefs": [
+        "LeaveRequestForm",
+        "DatePicker",
+        "ErrorMessage"
+      ],
+      "testRefs": [
+        "Test het indienen van een verlofaanvraag waarbij de startdatum na de einddatum ligt. Ervaar een foutmelding."
+      ]
+    },
+    {
+      "reqId": "REQ-003",
+      "backendRefs": [
+        "LeaveRequestValidationService",
+        "PastDateValidationRule"
+      ],
+      "frontendRefs": [
+        "LeaveRequestForm",
+        "DatePicker",
+        "ErrorMessage"
+      ],
+      "testRefs": [
+        "Test het indienen van een verlofaanvraag met een startdatum in het verleden. Ervaar een foutmelding."
+      ]
+    },
+    {
+      "reqId": "REQ-004",
+      "backendRefs": [
+        "LeaveRequestController",
+        "LeaveRequestService",
+        "LeaveRequestResponse",
+        "LeaveRequestListResponse"
+      ],
+      "frontendRefs": [
+        "LeaveRequestListPage",
+        "LeaveRequestDetailPage"
+      ],
+      "testRefs": [
+        "Test het bekijken van eigen verlofaanvragen en verifieer dat de status (aangevraagd, goedgekeurd, afgewezen) correct wordt weergegeven."
+      ]
+    },
+    {
+      "reqId": "REQ-005",
+      "backendRefs": [
+        "LeaveRequestController",
+        "LeaveRequestService",
+        "LeaveRequestStatusTransitionValidationRule"
+      ],
+      "frontendRefs": [
+        "LeaveRequestListPage",
+        "Button"
+      ],
+      "testRefs": [
+        "Test het intrekken van een verlofaanvraag met status 'aangevraagd'. Verifieer dat de status wordt bijgewerkt naar 'ingetrokken'."
+      ]
+    },
+    {
+      "reqId": "REQ-006",
+      "backendRefs": [
+        "LeaveBalanceController",
+        "LeaveBalanceService",
+        "LeaveBalanceResponse"
+      ],
+      "frontendRefs": [
+        "LeaveBalanceDisplay",
+        "DashboardPage"
+      ],
+      "testRefs": [
+        "Test het weergeven van het aantal resterende verlofdagen voor het huidige jaar."
+      ]
+    },
+    {
+      "reqId": "REQ-007",
+      "backendRefs": [
+        "LeaveRequestController",
+        "LeaveRequestService",
+        "ApproveLeaveRequestRequest",
+        "RejectLeaveRequestRequest"
+      ],
+      "frontendRefs": [
+        "LeaveRequestDetailPage",
+        "Button",
+        "Input",
+        "Modal"
+      ],
+      "testRefs": [
+        "Test het goedkeuren en afwijzen van een openstaande verlofaanvraag door een manager. Bij afwijzing, test of een commentaar verplicht is en wordt opgeslagen."
+      ]
+    },
+    {
+      "reqId": "REQ-008",
+      "backendRefs": [
+        "LeaveRequestValidationService",
+        "OverlappingLeaveRequestValidationRule"
+      ],
+      "frontendRefs": [
+        "LeaveRequestForm",
+        "ErrorMessage"
+      ],
+      "testRefs": [
+        "Test het indienen van een verlofaanvraag die overlapt met een reeds bestaande goedgekeurde verlofaanvraag voor dezelfde medewerker. Ervaar een foutmelding."
+      ]
+    },
+    {
+      "reqId": "REQ-009",
+      "backendRefs": [
+        "LeaveRequestController",
+        "EmployeeController",
+        "GlobalExceptionHandler",
+        "FieldError"
+      ],
+      "frontendRefs": [
+        "LeaveRequestForm",
+        "EmployeeForm",
+        "ErrorMessage"
+      ],
+      "testRefs": [
+        "Test het indienen van formulieren met ongeldige invoer in verschillende velden. Verifieer dat veldspecifieke foutmeldingen worden getoond."
+      ]
+    },
+    {
+      "reqId": "REQ-010",
+      "backendRefs": [
+        "LeaveEntitlementValidationRule",
+        "LeaveRequestService"
+      ],
+      "frontendRefs": [
+        "LeaveRequestForm",
+        "ErrorMessage"
+      ],
+      "testRefs": [
+        "Test het indienen van een 'jaarlijks' verlofaanvraag die de limiet van 20 dagen overschrijdt. Ervaar een foutmelding."
+      ]
+    },
+    {
+      "reqId": "REQ-011",
+      "backendRefs": [
+        "LeaveEntitlementValidationRule",
+        "LeaveRequestService"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Test het indienen van een 'ziekte' verlofaanvraag van meer dan 20 dagen. Verifieer dat dit zonder foutmelding wordt verwerkt."
+      ]
+    },
+    {
+      "reqId": "REQ-012",
+      "backendRefs": [
+        "LeaveRequestService",
+        "LeaveRequestStatusTransitionValidationRule"
+      ],
+      "frontendRefs": [
+        "LeaveRequestDetailPage"
+      ],
+      "testRefs": [
+        "Test het proberen te wijzigen van een verlofaanvraag met status 'goedgekeurd'. Verifieer dat de wijzigingsopties niet beschikbaar zijn of dat een foutmelding wordt getoond."
+      ]
+    },
+    {
+      "reqId": "REQ-013",
+      "backendRefs": [
+        "LeaveRequestController",
+        "LeaveRequestService"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Meet de responstijd van de API-aanroep voor het indienen van een verlofaanvraag. Verifieer dat deze binnen 2 seconden wordt verwerkt."
+      ]
+    },
+    {
+      "reqId": "REQ-014",
+      "backendRefs": [
+        "LeaveRequestController",
+        "SecurityConfig",
+        "JwtTokenProvider"
+      ],
+      "frontendRefs": [
+        "LeaveRequestListPage",
+        "LeaveRequestDetailPage"
+      ],
+      "testRefs": [
+        "Test vanuit verschillende gebruikersrollen (medewerker, manager, andere medewerker) of de juiste verlofaanvragen zichtbaar zijn. Verifieer dat alleen eigen aanvragen en die van ondergeschikten zichtbaar zijn voor managers."
+      ]
+    },
+    {
+      "reqId": "REQ-015",
+      "backendRefs": [
+        "LeaveRequestController",
+        "LeaveRequestService",
+        "ApproveLeaveRequestRequest",
+        "RejectLeaveRequestRequest"
+      ],
+      "frontendRefs": [
+        "LeaveRequestListPage",
+        "LeaveRequestDetailPage",
+        "Button"
+      ],
+      "testRefs": [
+        "Test het goedkeuren en afwijzen van verlofaanvragen door een manager."
+      ]
+    },
+    {
+      "reqId": "REQ-016",
+      "backendRefs": [
+        "LeaveRequestController",
+        "LeaveRequestService",
+        "CreateLeaveRequestRequest"
+      ],
+      "frontendRefs": [
+        "LeaveRequestForm"
+      ],
+      "testRefs": [
+        "Test het volledige proces van een medewerker die een verlofaanvraag indient en de manager die deze vervolgens kan goedkeuren of afwijzen."
+      ]
+    },
+    {
+      "reqId": "REQ-017",
+      "backendRefs": [
+        "LeaveRequestController",
+        "LeaveRequestService",
+        "LeaveRequestListResponse"
+      ],
+      "frontendRefs": [
+        "LeaveRequestListPage"
+      ],
+      "testRefs": [
+        "Test het weergeven van een overzicht van alle verlofaanvragen van de ingelogde medewerker."
+      ]
+    },
+    {
+      "reqId": "REQ-018",
+      "backendRefs": [
+        "LeaveRequestController",
+        "LeaveRequestService",
+        "LeaveRequestStatusTransitionValidationRule"
+      ],
+      "frontendRefs": [
+        "LeaveRequestListPage",
+        "Button"
+      ],
+      "testRefs": [
+        "Test het intrekken van een verlofaanvraag die nog niet is goedgekeurd. Verifieer dat de status correct wordt bijgewerkt."
+      ]
+    },
+    {
+      "reqId": "REQ-019",
+      "backendRefs": [
+        "LeaveBalanceController",
+        "LeaveBalanceService",
+        "LeaveBalanceResponse"
+      ],
+      "frontendRefs": [
+        "LeaveBalanceDisplay"
+      ],
+      "testRefs": [
+        "Test het weergeven van de resterende verlofdagen van de medewerker."
+      ]
+    }
+  ]
+}
