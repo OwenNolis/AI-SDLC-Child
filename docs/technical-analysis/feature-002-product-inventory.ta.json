@@ -1,0 +1,929 @@
+{
+  "meta": {
+    "featureId": "feature-002-product-inventory",
+    "title": "Feature-002: Product Inventory Management",
+    "version": "1.0.0"
+  },
+  "scope": {
+    "inScope": [
+      "Aanmaken van een nieuw product met naam, SKU, beschrijving en initi\u00eble voorraad",
+      "Opvragen van een enkel product op basis van ID of SKU",
+      "Opvragen van alle producten (met paginering)",
+      "Bijwerken van productinformatie (naam, beschrijving)",
+      "Voorraad verhogen of verlagen via een stockmutatie",
+      "Verwijderen van een product (alleen als voorraad 0 is)",
+      "Opvragen van producten met voorraad onder een instelbare drempelwaarde (low-stock alert)"
+    ],
+    "outOfScope": [
+      "Gebruikersbeheer en authenticatie",
+      "Leveranciersbeheer",
+      "Bestel- en aankoopflows",
+      "Barcode- of QR-scanning",
+      "Rapportage en dashboards"
+    ]
+  },
+  "assumptions": [],
+  "openQuestions": [],
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "text": "Een product heeft een unieke SKU (max 20 tekens, alleen hoofdletters, cijfers en koppeltekens).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-002",
+      "text": "Een product heeft een naam (verplicht, max 100 tekens), een optionele beschrijving (max 500 tekens) en een voorraad (geheel getal, minimaal 0).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-003",
+      "text": "Bij aanmaken van een product moet de initi\u00eble voorraad opgegeven worden (minimaal 0).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-004",
+      "text": "Een SKU mag niet dubbel voorkomen in het systeem.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-005",
+      "text": "Voorraad mag nooit negatief worden; een verlaging die de voorraad onder 0 zou brengen wordt geweigerd.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-006",
+      "text": "Een product kan alleen verwijderd worden als de huidige voorraad exact 0 is.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-007",
+      "text": "De low-stock drempelwaarde is instelbaar per opvraging (query parameter, standaard 10).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-008",
+      "text": "Paginering bij het opvragen van alle producten: page en size als query parameters (standaard page=0, size=20, max size=100).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-009",
+      "text": "SKU-formaat: 3 tot 20 tekens, alleen A-Z, 0-9 en koppelteken (-), moet beginnen met een letter.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-010",
+      "text": "Een stockmutatie heeft een type (IN of OUT) en een hoeveelheid (minimaal 1).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-011",
+      "text": "Bij een OUT-mutatie groter dan de huidige voorraad geeft het systeem HTTP 422 terug met een duidelijke foutmelding.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-012",
+      "text": "Bij verwijderen van een product met voorraad > 0 geeft het systeem HTTP 409 terug.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-013",
+      "text": "Productnaam en SKU worden bij opslaan getrimd (leading/trailing whitespace verwijderd).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-014",
+      "text": "Alle endpoints geven een antwoord binnen 500ms onder normaal gebruik.",
+      "priority": "should"
+    },
+    {
+      "id": "REQ-015",
+      "text": "De API volgt REST-conventies en geeft JSON terug met consistente foutstructuur: { \"error\": \"...\", \"details\": \"...\" }.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-016",
+      "text": "Invoervalidatie gebeurt server-side; ongeldige verzoeken krijgen HTTP 400 met een beschrijving per veld.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-017",
+      "text": "Een product heeft een uniek ID (auto-generated).",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-018",
+      "text": "Een product heeft een aanmaakdatum en een laatste wijzigingsdatum.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-019",
+      "text": "Een stockmutatie heeft een uniek ID.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-020",
+      "text": "Een stockmutatie is gekoppeld aan een product via productId.",
+      "priority": "must"
+    },
+    {
+      "id": "REQ-021",
+      "text": "Een stockmutatie heeft een mutatie datum.",
+      "priority": "must"
+    }
+  ],
+  "domain": {
+    "entities": [
+      {
+        "name": "Product",
+        "fields": [
+          {
+            "name": "id",
+            "type": "Long",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing"
+            ]
+          },
+          {
+            "name": "sku",
+            "type": "String",
+            "constraints": [
+              "notNull",
+              "minLength:3",
+              "maxLength:20",
+              "pattern:^[A-Z][A-Z0-9-]{2,19}$"
+            ],
+            "testCases": [
+              "empty",
+              "too_short",
+              "too_long",
+              "missing",
+              "invalid_value",
+              "duplicate_per_day"
+            ]
+          },
+          {
+            "name": "name",
+            "type": "String",
+            "constraints": [
+              "notNull",
+              "maxLength:100"
+            ],
+            "testCases": [
+              "empty",
+              "too_long",
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "description",
+            "type": "String",
+            "constraints": [
+              "maxLength:500"
+            ],
+            "testCases": [
+              "too_long",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "stock",
+            "type": "Integer",
+            "constraints": [
+              "notNull",
+              "min:0"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "LocalDateTime",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing"
+            ]
+          },
+          {
+            "name": "lastModifiedAt",
+            "type": "LocalDateTime",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "StockMutation",
+        "fields": [
+          {
+            "name": "id",
+            "type": "Long",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing"
+            ]
+          },
+          {
+            "name": "productId",
+            "type": "Long",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "type",
+            "type": "String",
+            "constraints": [
+              "notNull",
+              "enum:IN,OUT"
+            ],
+            "testCases": [
+              "empty",
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "quantity",
+            "type": "Integer",
+            "constraints": [
+              "notNull",
+              "min:1"
+            ],
+            "testCases": [
+              "empty",
+              "missing",
+              "invalid_value"
+            ]
+          },
+          {
+            "name": "mutationDate",
+            "type": "LocalDateTime",
+            "constraints": [
+              "notNull"
+            ],
+            "testCases": [
+              "missing"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "api": {
+    "errorFormat": {
+      "type": "ApiError",
+      "fields": [
+        "correlationId",
+        "code",
+        "message",
+        "fieldErrors"
+      ]
+    },
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/api/products",
+        "summary": "Maak een nieuw product aan",
+        "request": {
+          "bodySchemaRef": "CreateProductRequest",
+          "validationRules": [
+            "sku: notNull, minLength:3, maxLength:20, pattern:^[A-Z][A-Z0-9-]{2,19}$",
+            "name: notNull, maxLength:100",
+            "description: maxLength:500",
+            "stock: notNull, min:0"
+          ]
+        },
+        "responses": [
+          {
+            "status": 201,
+            "bodySchemaRef": "ProductResponse",
+            "notes": "Product succesvol aangemaakt"
+          },
+          {
+            "status": 400,
+            "bodySchemaRef": "ApiError",
+            "notes": "Validatiefout in request body (REQ-016)"
+          },
+          {
+            "status": 409,
+            "bodySchemaRef": "ApiError",
+            "notes": "SKU bestaat al (REQ-004)"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "none"
+      },
+      {
+        "method": "GET",
+        "path": "/api/products",
+        "summary": "Haal een lijst met producten op",
+        "request": {},
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "ProductListResponse",
+            "notes": "Lijst met producten succesvol opgehaald"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "none"
+      },
+      {
+        "method": "GET",
+        "path": "/api/products/{id}",
+        "summary": "Haal een specifiek product op",
+        "request": {},
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "ProductResponse",
+            "notes": "Product succesvol opgehaald"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Product niet gevonden"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "none"
+      },
+      {
+        "method": "PUT",
+        "path": "/api/products/{id}",
+        "summary": "Update een bestaand product",
+        "request": {
+          "bodySchemaRef": "UpdateProductRequest",
+          "validationRules": [
+            "name: maxLength:100",
+            "description: maxLength:500",
+            "stock: min:0"
+          ]
+        },
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "ProductResponse",
+            "notes": "Product succesvol bijgewerkt"
+          },
+          {
+            "status": 400,
+            "bodySchemaRef": "ApiError",
+            "notes": "Validatiefout in request body (REQ-016)"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Product niet gevonden"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "none"
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/products/{id}",
+        "summary": "Verwijder een product",
+        "request": {},
+        "responses": [
+          {
+            "status": 204,
+            "notes": "Product succesvol verwijderd",
+            "bodySchemaRef": "EmptyResponse"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Product niet gevonden"
+          },
+          {
+            "status": 409,
+            "bodySchemaRef": "ApiError",
+            "notes": "Product kan niet verwijderd worden omdat de voorraad niet 0 is (REQ-006, REQ-012)"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "none"
+      },
+      {
+        "method": "POST",
+        "path": "/api/products/{productId}/stock-mutations",
+        "summary": "Voeg een stockmutatie toe",
+        "request": {
+          "bodySchemaRef": "CreateStockMutationRequest",
+          "validationRules": [
+            "type: notNull, enum:IN,OUT",
+            "quantity: notNull, min:1"
+          ]
+        },
+        "responses": [
+          {
+            "status": 201,
+            "bodySchemaRef": "StockMutationResponse",
+            "notes": "Stockmutatie succesvol aangemaakt"
+          },
+          {
+            "status": 400,
+            "bodySchemaRef": "ApiError",
+            "notes": "Validatiefout in request body (REQ-016)"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Product niet gevonden"
+          },
+          {
+            "status": 422,
+            "bodySchemaRef": "ApiError",
+            "notes": "OUT-mutatie groter dan huidige voorraad (REQ-005, REQ-011)"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "none"
+      },
+      {
+        "method": "GET",
+        "path": "/api/products/{productId}/stock-mutations",
+        "summary": "Haal de stockmutaties voor een product op",
+        "request": {},
+        "responses": [
+          {
+            "status": 200,
+            "bodySchemaRef": "StockMutationListResponse",
+            "notes": "Lijst met stockmutaties succesvol opgehaald"
+          },
+          {
+            "status": 404,
+            "bodySchemaRef": "ApiError",
+            "notes": "Product niet gevonden"
+          },
+          {
+            "status": 500,
+            "bodySchemaRef": "ApiError",
+            "notes": "Onverwachte serverfout"
+          }
+        ],
+        "auth": "none"
+      }
+    ]
+  },
+  "backend": {
+    "modules": [
+      {
+        "name": "product",
+        "classes": [
+          {
+            "name": "ProductController",
+            "responsibility": "Handelt inkomende HTTP-verzoeken af voor productgerelateerde operaties."
+          },
+          {
+            "name": "ProductService",
+            "responsibility": "Bevat de bedrijfslogica voor productbeheer, inclusief creatie, retrieval, update en deletie."
+          },
+          {
+            "name": "ProductRepository",
+            "responsibility": "Verantwoordelijk voor de interactie met de database voor productgegevens."
+          },
+          {
+            "name": "Product",
+            "responsibility": "Representeert het productdomeinobject met zijn attributen en constraints."
+          },
+          {
+            "name": "CreateProductRequest",
+            "responsibility": "DTO voor het aanmaken van een nieuw product."
+          },
+          {
+            "name": "UpdateProductRequest",
+            "responsibility": "DTO voor het updaten van een bestaand product."
+          },
+          {
+            "name": "ProductResponse",
+            "responsibility": "DTO voor het retourneren van productgegevens."
+          },
+          {
+            "name": "ProductListResponse",
+            "responsibility": "DTO voor het retourneren van een lijst met productgegevens."
+          },
+          {
+            "name": "ProductSkuAlreadyExistsException",
+            "responsibility": "Exception die wordt gegooid wanneer een SKU al bestaat."
+          },
+          {
+            "name": "ProductNotFoundException",
+            "responsibility": "Exception die wordt gegooid wanneer een product niet wordt gevonden."
+          },
+          {
+            "name": "ProductCannotBeDeletedException",
+            "responsibility": "Exception die wordt gegooid wanneer een product niet verwijderd kan worden vanwege voorraad."
+          },
+          {
+            "name": "ProductValidationService",
+            "responsibility": "Valideert de bedrijfsregels voor productcreatie en -updates."
+          },
+          {
+            "name": "ProductSkuUniquenessValidator",
+            "responsibility": "Valideert de uniciteit van de SKU."
+          },
+          {
+            "name": "ProductStockValidationService",
+            "responsibility": "Valideert de voorraadgerelateerde bedrijfsregels voor producten."
+          }
+        ]
+      },
+      {
+        "name": "stockmutation",
+        "classes": [
+          {
+            "name": "StockMutationController",
+            "responsibility": "Handelt inkomende HTTP-verzoeken af voor stockmutatiegerelateerde operaties."
+          },
+          {
+            "name": "StockMutationService",
+            "responsibility": "Bevat de bedrijfslogica voor het beheren van stockmutaties."
+          },
+          {
+            "name": "StockMutationRepository",
+            "responsibility": "Verantwoordelijk voor de interactie met de database voor stockmutatiegegevens."
+          },
+          {
+            "name": "StockMutation",
+            "responsibility": "Representeert het stockmutatie domeinobject met zijn attributen en constraints."
+          },
+          {
+            "name": "CreateStockMutationRequest",
+            "responsibility": "DTO voor het aanmaken van een nieuwe stockmutatie."
+          },
+          {
+            "name": "StockMutationResponse",
+            "responsibility": "DTO voor het retourneren van stockmutatiegegevens."
+          },
+          {
+            "name": "StockMutationListResponse",
+            "responsibility": "DTO voor het retourneren van een lijst met stockmutatiegegevens."
+          },
+          {
+            "name": "StockMutationOutOfStockException",
+            "responsibility": "Exception die wordt gegooid wanneer een OUT-mutatie de voorraad negatief zou maken."
+          },
+          {
+            "name": "StockMutationValidationService",
+            "responsibility": "Valideert de bedrijfsregels voor stockmutaties."
+          },
+          {
+            "name": "StockMutationQuantityValidator",
+            "responsibility": "Valideert de hoeveelheid van een stockmutatie."
+          }
+        ]
+      },
+      {
+        "name": "common",
+        "classes": [
+          {
+            "name": "ApiError",
+            "responsibility": "Standaard foutstructuur voor API-antwoorden."
+          },
+          {
+            "name": "GlobalExceptionHandler",
+            "responsibility": "Centrale handler voor het afhandelen van exceptions en het retourneren van gestandaardiseerde foutantwoorden."
+          },
+          {
+            "name": "ValidationErrorHandler",
+            "responsibility": "Specifieke handler voor het afhandelen van validatiefouten."
+          },
+          {
+            "name": "PageableRequest",
+            "responsibility": "DTO voor het afhandelen van pagineringparameters."
+          },
+          {
+            "name": "CorrelationIdFilter",
+            "responsibility": "Filter om een correlatie-ID toe te voegen aan elk verzoek voor tracing."
+          },
+          {
+            "name": "DateTimeUtils",
+            "responsibility": "Hulpprogramma's voor datum- en tijdbewerkingen."
+          }
+        ]
+      }
+    ]
+  },
+  "frontend": {
+    "routes": [],
+    "components": []
+  },
+  "tests": {
+    "unit": [],
+    "integration": [],
+    "e2e": []
+  },
+  "traceability": [
+    {
+      "reqId": "REQ-001",
+      "backendRefs": [
+        "Product",
+        "ProductValidationService",
+        "CreateProductRequest",
+        "UpdateProductRequest"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat een SKU maximaal 20 tekens lang is.",
+        "Valideer dat een SKU alleen hoofdletters, cijfers en koppeltekens bevat.",
+        "Valideer dat een SKU niet leeg is."
+      ]
+    },
+    {
+      "reqId": "REQ-002",
+      "backendRefs": [
+        "Product",
+        "ProductValidationService",
+        "CreateProductRequest",
+        "UpdateProductRequest"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat de productnaam verplicht is en maximaal 100 tekens lang.",
+        "Valideer dat de productbeschrijving optioneel is en maximaal 500 tekens lang.",
+        "Valideer dat de voorraad een geheel getal is en minimaal 0."
+      ]
+    },
+    {
+      "reqId": "REQ-003",
+      "backendRefs": [
+        "ProductService",
+        "CreateProductRequest"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat bij het aanmaken van een product de initi\u00eble voorraad opgegeven moet worden.",
+        "Valideer dat de initi\u00eble voorraad minimaal 0 is."
+      ]
+    },
+    {
+      "reqId": "REQ-004",
+      "backendRefs": [
+        "ProductRepository",
+        "ProductSkuUniquenessValidator",
+        "ProductService"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat een SKU niet dubbel kan voorkomen bij het aanmaken of updaten van een product."
+      ]
+    },
+    {
+      "reqId": "REQ-005",
+      "backendRefs": [
+        "ProductStockValidationService",
+        "StockMutationService",
+        "StockMutationRepository"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat een voorraadverlaging die de voorraad onder 0 zou brengen wordt geweigerd.",
+        "Valideer dat de voorraad nooit negatief wordt."
+      ]
+    },
+    {
+      "reqId": "REQ-006",
+      "backendRefs": [
+        "ProductService",
+        "ProductRepository"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat een product alleen verwijderd kan worden als de huidige voorraad exact 0 is."
+      ]
+    },
+    {
+      "reqId": "REQ-007",
+      "backendRefs": [
+        "ProductController",
+        "ProductService"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat de low-stock drempelwaarde ingesteld kan worden via een query parameter.",
+        "Valideer dat de standaard low-stock drempelwaarde 10 is."
+      ]
+    },
+    {
+      "reqId": "REQ-008",
+      "backendRefs": [
+        "ProductController",
+        "ProductService",
+        "PageableRequest"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat het opvragen van producten gepagineerd is met 'page' en 'size' query parameters.",
+        "Valideer dat de standaard 'page' 0 is.",
+        "Valideer dat de standaard 'size' 20 is.",
+        "Valideer dat de maximale 'size' 100 is."
+      ]
+    },
+    {
+      "reqId": "REQ-009",
+      "backendRefs": [
+        "Product",
+        "ProductValidationService",
+        "CreateProductRequest",
+        "UpdateProductRequest"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat een SKU tussen de 3 en 20 tekens lang is.",
+        "Valideer dat een SKU alleen A-Z, 0-9 en '-' bevat.",
+        "Valideer dat een SKU begint met een letter."
+      ]
+    },
+    {
+      "reqId": "REQ-010",
+      "backendRefs": [
+        "StockMutation",
+        "CreateStockMutationRequest",
+        "StockMutationValidationService"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat een stockmutatie een type (IN of OUT) heeft.",
+        "Valideer dat de hoeveelheid van een stockmutatie minimaal 1 is."
+      ]
+    },
+    {
+      "reqId": "REQ-011",
+      "backendRefs": [
+        "StockMutationService",
+        "StockMutationOutOfStockException",
+        "GlobalExceptionHandler"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat bij een OUT-mutatie groter dan de huidige voorraad, het systeem HTTP 422 teruggeeft met een duidelijke foutmelding."
+      ]
+    },
+    {
+      "reqId": "REQ-012",
+      "backendRefs": [
+        "ProductService",
+        "ProductCannotBeDeletedException",
+        "GlobalExceptionHandler"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat bij het verwijderen van een product met voorraad > 0, het systeem HTTP 409 teruggeeft."
+      ]
+    },
+    {
+      "reqId": "REQ-013",
+      "backendRefs": [
+        "Product",
+        "ProductValidationService",
+        "CreateProductRequest",
+        "UpdateProductRequest"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat de productnaam en SKU getrimd worden (leading/trailing whitespace verwijderd) bij opslaan."
+      ]
+    },
+    {
+      "reqId": "REQ-014",
+      "backendRefs": [
+        "CorrelationIdFilter",
+        "GlobalExceptionHandler"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Meet de responstijd van alle API endpoints onder normaal gebruik en valideer dat deze binnen 500ms blijft."
+      ]
+    },
+    {
+      "reqId": "REQ-015",
+      "backendRefs": [
+        "ProductController",
+        "StockMutationController",
+        "ApiError",
+        "GlobalExceptionHandler",
+        "ValidationErrorHandler"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat de API REST-conventies volgt.",
+        "Valideer dat alle antwoorden in JSON formaat zijn.",
+        "Valideer dat foutmeldingen de structuur { \"error\": \"...\", \"details\": \"...\" } volgen."
+      ]
+    },
+    {
+      "reqId": "REQ-016",
+      "backendRefs": [
+        "ProductValidationService",
+        "StockMutationValidationService",
+        "ValidationErrorHandler",
+        "GlobalExceptionHandler"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat invoervalidatie server-side gebeurt.",
+        "Valideer dat ongeldige verzoeken HTTP 400 teruggeven met een beschrijving per veld."
+      ]
+    },
+    {
+      "reqId": "REQ-017",
+      "backendRefs": [
+        "Product",
+        "ProductRepository"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat elk product een uniek, auto-generated ID heeft."
+      ]
+    },
+    {
+      "reqId": "REQ-018",
+      "backendRefs": [
+        "Product",
+        "DateTimeUtils"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat een product een aanmaakdatum heeft.",
+        "Valideer dat een product een laatste wijzigingsdatum heeft."
+      ]
+    },
+    {
+      "reqId": "REQ-019",
+      "backendRefs": [
+        "StockMutation",
+        "StockMutationRepository"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat elke stockmutatie een uniek ID heeft."
+      ]
+    },
+    {
+      "reqId": "REQ-020",
+      "backendRefs": [
+        "StockMutation",
+        "StockMutationRepository"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat een stockmutatie gekoppeld is aan een product via productId."
+      ]
+    },
+    {
+      "reqId": "REQ-021",
+      "backendRefs": [
+        "StockMutation",
+        "DateTimeUtils"
+      ],
+      "frontendRefs": [],
+      "testRefs": [
+        "Valideer dat een stockmutatie een mutatie datum heeft."
+      ]
+    }
+  ]
+}
